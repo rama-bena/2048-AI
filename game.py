@@ -1,13 +1,16 @@
 import pygame
 import numpy as np
-from libraryBantuan.nameValue import Color, Point
+from libraryBantuan.nameValue import Color, Move, Point
 from IPython.display import display
 import random
 
 class Cell:
     def __init__(self, x, y):
-        self.value = 1
         self.point = Point(x, y)
+        self.reset()
+
+    def reset(self):
+        self.value = 1
         self.color = Color.BLOCK_1
         self.font = pygame.font.SysFont('woff', 80)
         self.text  = self.font.render("", True, Color.TEXT_1)
@@ -34,6 +37,8 @@ class Cell:
             self.color = Color.BLOCK_32
             self.text  = self.font.render("32", True, Color.TEXT_32)
          
+    def update(self, value):
+        
 
 class Game2048:
     def __init__(self, screen_width=400, screen_height=400, speed=40, width=4, height=4):
@@ -69,7 +74,52 @@ class Game2048:
         # Update UI
         self._update_ui()
 
+    def _keyboard_listener(self):
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    self._move_up(self.matrix)
+                if event.key == pygame.K_RIGHT:
+                    self._move_right(self.matrix)
+                if event.key == pygame.K_DOWN:
+                    self._move_down(self.matrix)
+                if event.key == pygame.K_LEFT:
+                    self._move_left(self.matrix)
     
+    def _move_up(self, matrix):
+        pass
+
+    def _move_right(self, matrix):
+        pass
+    
+    def _move_down(self, matrix):
+        pass
+    
+    def _move_left(self, matrix):
+        for i in range(len(matrix)):
+            for j in range(1, len(matrix[i])):
+                cell = matrix[i][j]
+                if cell.value == 1:
+                    continue
+                next_cell = j-1
+                while matrix[i][next_cell].value == 1:
+                    next_cell -= 1
+                    if next_cell == -1: # keluar batas
+                        break
+                
+                
+                if next_cell == -1:                               # keluar batas
+                    matrix[i][0].update(matrix[i][j].value)
+                elif matrix[i][next_cell].value == cell.value:    # ada cell, cell nya sama
+                    pass
+                else:                                             # ada cell, cell nya beda
+                    pass
+                
+                matrix[i][j].reset()
+                
+        
+
+
     def _update_ui(self):
         for i in range(self.height):
             for j in range(self.width):
