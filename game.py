@@ -34,6 +34,7 @@ class Game2048:
 
     #* ----------------------------- Public Method ---------------------------- #
     def reset(self):
+        self.score = 0
         # buat matrix kosong
         self.matrix = []
         for y in range(self.padding//2, self.screen_width, self.block_size_width):
@@ -96,7 +97,7 @@ class Game2048:
                     if next_cell == -1: # keluar batas
                         break
                 
-                if next_cell == -1:                               # keluar batas
+                if next_cell == -1:                               # Taruh di akhir
                     can_move = True
                     matrix[0][j].set_value(value_now)
                     matrix[i][j].set_value(1)
@@ -105,6 +106,7 @@ class Game2048:
                     already_collision = True
                     matrix[next_cell][j].set_value(2*value_now)
                     matrix[i][j].set_value(1)
+                    self.score += (2*value_now)
                 elif (matrix[next_cell][j].value != value_now) and (next_cell != i-1):    # ada cell, cell nya beda
                     can_move = True
                     matrix[next_cell+1][j].set_value(value_now)
@@ -135,6 +137,7 @@ class Game2048:
                     already_collision = True
                     matrix[i][next_cell].set_value(2*value_now)
                     matrix[i][j].set_value(1)
+                    self.score += (2*value_now)
                 elif (matrix[i][next_cell].value != value_now) and (next_cell != j+1):                                             # cell nya beda dan tidak disamping
                     can_move = True
                     matrix[i][next_cell-1].set_value(value_now)
@@ -165,6 +168,7 @@ class Game2048:
                     already_collision = True
                     matrix[next_cell][j].set_value(2*value_now)
                     matrix[i][j].set_value(1)
+                    self.score += (2*value_now)
                 elif (matrix[next_cell][j].value != value_now) and (next_cell != i+1):    # ada cell, cell nya beda
                     can_move = True
                     matrix[next_cell-1][j].set_value(value_now)
@@ -195,6 +199,7 @@ class Game2048:
                     already_collision = True
                     matrix[i][next_cell].set_value(2*value_now)
                     matrix[i][j].set_value(1)
+                    self.score += (2*value_now)
                 elif (matrix[i][next_cell].value != value_now) and (next_cell != j-1):                                             # ada cell, cell nya beda
                     can_move = True
                     matrix[i][next_cell+1].set_value(value_now)
