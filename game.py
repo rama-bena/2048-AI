@@ -1,7 +1,6 @@
 import pygame
 import numpy as np
 from libraryBantuan.nameValue import CELL_DATA, Point
-from IPython.display import display
 import random
 
 class Cell:
@@ -101,16 +100,22 @@ class Game2048:
                     can_move = True
                     matrix[0][j].set_value(value_now)
                     matrix[i][j].set_value(1)
-                elif (matrix[next_cell][j].value==value_now) and (not already_collision):    # ada cell, cell nya sama
+
+                elif matrix[next_cell][j].value == value_now:    # Cell nya sama
                     can_move = True
-                    already_collision = True
-                    matrix[next_cell][j].set_value(2*value_now)
                     matrix[i][j].set_value(1)
-                    self.score += (2*value_now)
-                elif (matrix[next_cell][j].value != value_now) and (next_cell != i-1):    # ada cell, cell nya beda
+                    if not already_collision:       # Belum pernah collision
+                        already_collision = True
+                        matrix[next_cell][j].set_value(2*value_now)
+                        self.score += (2*value_now)
+                    else:               # kalau sudah pernah collicion -> taruh disampingnya
+                        matrix[next_cell+1][j].set_value(value_now)
+
+                elif (matrix[next_cell][j].value != value_now) and (next_cell != i-1):    # ada cell, cell nya beda dan tidak disamping
                     can_move = True
                     matrix[next_cell+1][j].set_value(value_now)
                     matrix[i][j].set_value(1)
+
         return can_move
 
     def _move_right(self):
@@ -132,16 +137,22 @@ class Game2048:
                     can_move = True
                     matrix[i][len(matrix[i])-1].set_value(value_now)
                     matrix[i][j].set_value(1)
-                elif (matrix[i][next_cell].value==value_now) and (not already_collision):    # ada cell, cell nya sama
+                
+                elif matrix[i][next_cell].value == value_now:    # Cell nya sama
                     can_move = True
-                    already_collision = True
-                    matrix[i][next_cell].set_value(2*value_now)
                     matrix[i][j].set_value(1)
-                    self.score += (2*value_now)
+                    if not already_collision:       # Belum pernah collision
+                        already_collision = True
+                        matrix[i][next_cell].set_value(2*value_now)
+                        self.score += (2*value_now)
+                    else:                           # kalau sudah pernah collicion -> taruh disampingnya
+                        matrix[i][next_cell-1].set_value(value_now)
+                
                 elif (matrix[i][next_cell].value != value_now) and (next_cell != j+1):                                             # cell nya beda dan tidak disamping
                     can_move = True
                     matrix[i][next_cell-1].set_value(value_now)
                     matrix[i][j].set_value(1)
+
         return can_move
     
     def _move_down(self):
@@ -159,20 +170,25 @@ class Game2048:
                     if next_cell == len(matrix): # keluar batas
                         break
                 
-                if next_cell == len(matrix):                               # keluar batas
+                if next_cell == len(matrix):                               # Taruh di akhir
                     can_move = True
                     matrix[len(matrix)-1][j].set_value(value_now)
                     matrix[i][j].set_value(1)
-                elif (matrix[next_cell][j].value==value_now) and (not already_collision):    # ada cell, cell nya sama
+                elif matrix[next_cell][j].value == value_now:           # Cell nya sama
                     can_move = True
-                    already_collision = True
-                    matrix[next_cell][j].set_value(2*value_now)
                     matrix[i][j].set_value(1)
-                    self.score += (2*value_now)
+                    if not already_collision:
+                        already_collision = True
+                        matrix[next_cell][j].set_value(2*value_now)
+                        self.score += (2*value_now)
+                    else:
+                        matrix[next_cell-1][j].set_value(value_now)
+
                 elif (matrix[next_cell][j].value != value_now) and (next_cell != i+1):    # ada cell, cell nya beda
                     can_move = True
                     matrix[next_cell-1][j].set_value(value_now)
                     matrix[i][j].set_value(1)
+
         return can_move
     
     def _move_left(self):
@@ -190,16 +206,21 @@ class Game2048:
                     if next_cell == -1: # keluar batas
                         break
                 
-                if next_cell == -1:                               # keluar batas
+                if next_cell == -1:                               # Taruh di akhir
                     can_move = True
                     matrix[i][0].set_value(value_now)
                     matrix[i][j].set_value(1)
-                elif (matrix[i][next_cell].value==value_now) and (not already_collision):    # ada cell, cell nya sama
+               
+                elif matrix[i][next_cell].value == value_now:    # Cell nya sama
                     can_move = True
-                    already_collision = True
-                    matrix[i][next_cell].set_value(2*value_now)
                     matrix[i][j].set_value(1)
-                    self.score += (2*value_now)
+                    if not already_collision:
+                        already_collision = True
+                        matrix[i][next_cell].set_value(2*value_now)
+                        self.score += (2*value_now)
+                    else:
+                        matrix[i][next_cell+1].set_value(value_now)
+
                 elif (matrix[i][next_cell].value != value_now) and (next_cell != j-1):                                             # ada cell, cell nya beda
                     can_move = True
                     matrix[i][next_cell+1].set_value(value_now)
