@@ -1,44 +1,21 @@
 import pygame
 import numpy as np
-from libraryBantuan.nameValue import Color, Move, Point
+from libraryBantuan.nameValue import CELL_DATA, Move, Point
 from IPython.display import display
 import random
 
 class Cell:
     def __init__(self, x, y):
         self.point = Point(x, y)
-        self.reset()
-
-    def reset(self):
-        self.value = 1
-        self.color = Color.BLOCK_1
         self.font = pygame.font.SysFont('woff', 80)
-        self.text  = self.font.render("", True, Color.TEXT_1)
+        self.set_value()
 
-    def next_value(self):
-        if self.value == 1:
-            self.value = 2
-            self.color = Color.BLOCK_2
-            self.text  = self.font.render("2", True, Color.TEXT_2)
-        elif self.value == 2:
-            self.value = 4
-            self.color = Color.BLOCK_4
-            self.text  = self.font.render("4", True, Color.TEXT_4)
-        elif self.value == 4:
-            self.value = 8
-            self.color = Color.BLOCK_8
-            self.text  = self.font.render("8", True, Color.TEXT_8)
-        elif self.value == 8:
-            self.value = 16
-            self.color = Color.BLOCK_16
-            self.text  = self.font.render("16", True, Color.TEXT_16)
-        elif self.value == 16:
-            self.value = 32
-            self.color = Color.BLOCK_32
-            self.text  = self.font.render("32", True, Color.TEXT_32)
-         
-    def update(self, value):
-        
+    def set_value(self, value=1):
+        index = int(np.log2(value))
+        self.value = CELL_DATA[index].value
+        self.color = CELL_DATA[index].color
+        text = "" if self.value == 1 else str(self.value)
+        self.text  = self.font.render(text, True, CELL_DATA[index].text_color)
 
 class Game2048:
     def __init__(self, screen_width=400, screen_height=400, speed=40, width=4, height=4):
@@ -53,7 +30,7 @@ class Game2048:
 
         pygame.init()
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-        self.screen.fill(Color.SCREEN)
+        self.screen.fill((187,173,160))
         pygame.display.flip()
 
         self.reset()
@@ -61,9 +38,9 @@ class Game2048:
     def reset(self):
         # buat matrix kosong
         self.matrix = []
-        for x in range(self.padding//2, self.screen_height, self.block_size_height):
+        for y in range(self.padding//2, self.screen_width, self.block_size_width):
             row = []
-            for y in range(self.padding//2, self.screen_width, self.block_size_width):
+            for x in range(self.padding//2, self.screen_height, self.block_size_height):
                 row.append(Cell(x, y))
             self.matrix.append(row)
         
@@ -74,32 +51,131 @@ class Game2048:
         # Update UI
         self._update_ui()
 
-    def _keyboard_listener(self):
+    def keyboard_listener(self):
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.QUIT: # Pencet exit
+                return False
+            if event.type == pygame.KEYDOWN: # Keyboard ditekan
                 if event.key == pygame.K_UP:
-                    self._move_up(self.matrix)
+                    print("atas")
+                    can_move = self._move_up(self.matrix)
+                    if can_move:
+                        self._place_random_cell()
+                        self._update_ui()
                 if event.key == pygame.K_RIGHT:
-                    self._move_right(self.matrix)
+                    print("kanan")
+                    can_move = self._move_right(self.matrix)
+                    if can_move:
+                        self._place_random_cell()
+                        self._update_ui()
                 if event.key == pygame.K_DOWN:
-                    self._move_down(self.matrix)
+                    print("bawah")
+                    can_move = self._move_down(self.matrix)
+                    if can_move:
+                        self._place_random_cell()
+                        self._update_ui()
                 if event.key == pygame.K_LEFT:
-                    self._move_left(self.matrix)
-    
+                    print("kiri")
+                    can_move = self._move_left(self.matrix)
+                    if can_move:
+                        self._place_random_cell()
+                        self._update_ui()
+        return True
+
     def _move_up(self, matrix):
-        pass
+        can_move = False
+        for j in range(len(matrix[0])):
+            already_collision = False
+            for i in range(1, len(matrix)):
+                value_now = matrix[i][j].value
+                if value_now == 1:
+                    continue
+                next_cell = i-1
+                while matrix[next_cell][j].value == 1:
+                    next_cell -= 1
+                    if next_cell == -1: # keluar batas
+                        break
+                
+                if next_cell == -1:                               # keluar batas
+                    can_move = True
+                    matrix[0][j].set_value(value_now)
+                    matrix[i][j].set_value(1)
+                elif (matrix[next_cell][j].value==value_now) and (not already_collision):    # ada cell, cell nya sama
+                    can_move = True
+                    already_collision = True
+                    matrix[next_cell][j].set_value(2*value_now)
+                    matrix[i][j].set_value(1)
+                elif (matrix[next_cell][j].value != value_now) and (next_cell != i-1):    # ada cell, cell nya beda
+                    can_move = True
+                    matrix[next_cell+1][j].set_value(value_now)
+                    matrix[i][j].set_value(1)
+        return can_move
 
     def _move_right(self, matrix):
-        pass
+        can_move = False
+        for i in range(len(matrix)):
+            already_collision = False
+            for j in range(len(matrix[i])-2, -1, -1):
+                value_now = matrix[i][j].value
+                if value_now == 1:
+                    continue
+                next_cell = j+1
+                while matrix[i][next_cell].value == 1:
+                    next_cell += 1
+                    if next_cell == len(matrix[i]): # keluar batas
+                        break
+                
+                if next_cell == len(matrix[i]):                               # keluar batas
+                    can_move = True
+                    matrix[i][len(matrix[i])-1].set_value(value_now)
+                    matrix[i][j].set_value(1)
+                elif (matrix[i][next_cell].value==value_now) and (not already_collision):    # ada cell, cell nya sama
+                    can_move = True
+                    already_collision = True
+                    matrix[i][next_cell].set_value(2*value_now)
+                    matrix[i][j].set_value(1)
+                elif (matrix[i][next_cell].value != value_now) and (next_cell != j+1):                                             # cell nya beda dan tidak disamping
+                    can_move = True
+                    matrix[i][next_cell-1].set_value(value_now)
+                    matrix[i][j].set_value(1)
+        return can_move
     
     def _move_down(self, matrix):
-        pass
+        can_move = False
+        for j in range(len(matrix[0])):
+            already_collision = False
+            for i in range(len(matrix)-2, -1, -1):
+                value_now = matrix[i][j].value
+                if value_now == 1:
+                    continue
+                next_cell = i+1
+                while matrix[next_cell][j].value == 1:
+                    next_cell += 1
+                    if next_cell == len(matrix): # keluar batas
+                        break
+                
+                if next_cell == len(matrix):                               # keluar batas
+                    can_move = True
+                    matrix[len(matrix)-1][j].set_value(value_now)
+                    matrix[i][j].set_value(1)
+                elif (matrix[next_cell][j].value==value_now) and (not already_collision):    # ada cell, cell nya sama
+                    can_move = True
+                    already_collision = True
+                    matrix[next_cell][j].set_value(2*value_now)
+                    matrix[i][j].set_value(1)
+                elif (matrix[next_cell][j].value != value_now) and (next_cell != i+1):    # ada cell, cell nya beda
+                    can_move = True
+                    matrix[next_cell-1][j].set_value(value_now)
+                    matrix[i][j].set_value(1)
+        return can_move
     
     def _move_left(self, matrix):
+        can_move = False
         for i in range(len(matrix)):
+            already_collision = False
             for j in range(1, len(matrix[i])):
-                cell = matrix[i][j]
-                if cell.value == 1:
+                value_now = matrix[i][j].value
+                if value_now == 1:
                     continue
                 next_cell = j-1
                 while matrix[i][next_cell].value == 1:
@@ -107,22 +183,24 @@ class Game2048:
                     if next_cell == -1: # keluar batas
                         break
                 
-                
                 if next_cell == -1:                               # keluar batas
-                    matrix[i][0].update(matrix[i][j].value)
-                elif matrix[i][next_cell].value == cell.value:    # ada cell, cell nya sama
-                    pass
-                else:                                             # ada cell, cell nya beda
-                    pass
-                
-                matrix[i][j].reset()
-                
-        
-
+                    can_move = True
+                    matrix[i][0].set_value(value_now)
+                    matrix[i][j].set_value(1)
+                elif (matrix[i][next_cell].value==value_now) and (not already_collision):    # ada cell, cell nya sama
+                    can_move = True
+                    already_collision = True
+                    matrix[i][next_cell].set_value(2*value_now)
+                    matrix[i][j].set_value(1)
+                elif (matrix[i][next_cell].value != value_now) and (next_cell != j-1):                                             # ada cell, cell nya beda
+                    can_move = True
+                    matrix[i][next_cell+1].set_value(value_now)
+                    matrix[i][j].set_value(1)
+        return can_move
 
     def _update_ui(self):
-        for i in range(self.height):
-            for j in range(self.width):
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix[i])):
                 cell = self.matrix[i][j]
                 block = pygame.Rect((cell.point.x, cell.point.y), (self.block_size_width-self.padding, self.block_size_height-self.padding))
                 point_text = (cell.point.x + self.padding, cell.point.y + self.padding)
@@ -135,15 +213,18 @@ class Game2048:
 
     def _place_random_cell(self):
         candidate_cell = []
+        # ambil semua cell kosong
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[0])):
                 if self.matrix[i][j].value == 1:
                     candidate_cell.append(self.matrix[i][j])
-
+        
+        # pilih salah satu dari semua cell kosong
         random_cell = random.choice(candidate_cell)
-        random_cell.next_value()
-        if random.randint(1, 100) <= 10:
-            random_cell.next_value()
+        if random.randint(1, 100) <= 10: # 10% kemungkinan muncul cell 4
+            random_cell.set_value(4)
+        else:
+            random_cell.set_value(2)
 
 
 def main():
@@ -151,9 +232,7 @@ def main():
 
     is_running = True
     while is_running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT: 
-                is_running = False
+        is_running = game.keyboard_listener()
 
 if __name__ == "__main__":
     main()
