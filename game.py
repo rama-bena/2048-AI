@@ -1,13 +1,12 @@
 import pygame
 import numpy as np
-from libraryBantuan.nameValue import CELL_DATA, Move, Point
+from libraryBantuan.nameValue import CELL_DATA, Point
 from IPython.display import display
 import random
 
 class Cell:
     def __init__(self, x, y):
         self.point = Point(x, y)
-        self.font = pygame.font.SysFont('woff', 80)
         self.set_value()
 
     def set_value(self, value=1):
@@ -15,7 +14,7 @@ class Cell:
         self.value = CELL_DATA[index].value
         self.color = CELL_DATA[index].color
         text = "" if self.value == 1 else str(self.value)
-        self.text  = self.font.render(text, True, CELL_DATA[index].text_color)
+        self.text  = pygame.font.SysFont('woff', CELL_DATA[index].text_size).render(text, True, CELL_DATA[index].text_color)
 
 class Game2048:
     def __init__(self, screen_width=400, screen_height=400, speed=40, width=4, height=4):
@@ -30,11 +29,10 @@ class Game2048:
 
         pygame.init()
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-        self.screen.fill((187,173,160))
-        pygame.display.flip()
-
+        pygame.display.set_caption("Game 2048 by Rama Bena")
         self.reset()
 
+    #* ----------------------------- Public Method ---------------------------- #
     def reset(self):
         # buat matrix kosong
         self.matrix = []
@@ -58,31 +56,33 @@ class Game2048:
             if event.type == pygame.KEYDOWN: # Keyboard ditekan
                 if event.key == pygame.K_UP:
                     print("atas")
-                    can_move = self._move_up(self.matrix)
+                    can_move = self._move_up()
                     if can_move:
                         self._place_random_cell()
                         self._update_ui()
                 if event.key == pygame.K_RIGHT:
                     print("kanan")
-                    can_move = self._move_right(self.matrix)
+                    can_move = self._move_right()
                     if can_move:
                         self._place_random_cell()
                         self._update_ui()
                 if event.key == pygame.K_DOWN:
                     print("bawah")
-                    can_move = self._move_down(self.matrix)
+                    can_move = self._move_down()
                     if can_move:
                         self._place_random_cell()
                         self._update_ui()
                 if event.key == pygame.K_LEFT:
                     print("kiri")
-                    can_move = self._move_left(self.matrix)
+                    can_move = self._move_left()
                     if can_move:
                         self._place_random_cell()
                         self._update_ui()
         return True
 
-    def _move_up(self, matrix):
+    #* ---------------------------- Private Method ---------------------------- #
+    def _move_up(self):
+        matrix = self.matrix
         can_move = False
         for j in range(len(matrix[0])):
             already_collision = False
@@ -111,7 +111,8 @@ class Game2048:
                     matrix[i][j].set_value(1)
         return can_move
 
-    def _move_right(self, matrix):
+    def _move_right(self):
+        matrix = self.matrix
         can_move = False
         for i in range(len(matrix)):
             already_collision = False
@@ -140,7 +141,8 @@ class Game2048:
                     matrix[i][j].set_value(1)
         return can_move
     
-    def _move_down(self, matrix):
+    def _move_down(self):
+        matrix = self.matrix
         can_move = False
         for j in range(len(matrix[0])):
             already_collision = False
@@ -169,7 +171,8 @@ class Game2048:
                     matrix[i][j].set_value(1)
         return can_move
     
-    def _move_left(self, matrix):
+    def _move_left(self):
+        matrix = self.matrix
         can_move = False
         for i in range(len(matrix)):
             already_collision = False
@@ -198,19 +201,6 @@ class Game2048:
                     matrix[i][j].set_value(1)
         return can_move
 
-    def _update_ui(self):
-        for i in range(len(self.matrix)):
-            for j in range(len(self.matrix[i])):
-                cell = self.matrix[i][j]
-                block = pygame.Rect((cell.point.x, cell.point.y), (self.block_size_width-self.padding, self.block_size_height-self.padding))
-                point_text = (cell.point.x + self.padding, cell.point.y + self.padding)
-                
-                # gambar
-                pygame.draw.rect(self.screen, cell.color, block)
-                self.screen.blit(cell.text, point_text)
-        # update semuanya
-        pygame.display.flip()
-
     def _place_random_cell(self):
         candidate_cell = []
         # ambil semua cell kosong
@@ -226,6 +216,31 @@ class Game2048:
         else:
             random_cell.set_value(2)
 
+    def _update_ui(self):
+        # Warnain background
+        self.screen.fill((187,173,160))
+
+        # Setiap block nya
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix[i])):
+                cell       = self.matrix[i][j]
+                block      = pygame.Rect((cell.point.x, cell.point.y), (self.block_size_width-self.padding, self.block_size_height-self.padding))
+                point_text = (cell.point.x + self.padding, cell.point.y + self.padding)
+                
+                # Gambar Block dan text nya
+                pygame.draw.rect(self.screen, cell.color, block)
+                self.screen.blit(cell.text, point_text)
+        # update semuanya
+        pygame.display.flip()
+
+    def _testing(self):
+        now = 4
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix[i])):
+                self.matrix[i][j].set_value(now)
+                now *= 2
+
+
 
 def main():
     game = Game2048()
@@ -233,6 +248,7 @@ def main():
     is_running = True
     while is_running:
         is_running = game.keyboard_listener()
-
+        
+    print("PERMAINAN SELESAI")
 if __name__ == "__main__":
     main()
