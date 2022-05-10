@@ -1,4 +1,5 @@
 from typing import List
+import pickle
 import pygame
 import numpy as np
 from libraryBantuan.nameValue import Move, Point, CELL_DATA, Color
@@ -23,19 +24,27 @@ class Game2048:
         self.speed = speed
         self.n = n
         self.m = m
-        self.high_score = 0
+        self.score = 0
+        #* Ambil high score dari file atau 0
+        try:
+            with open('data/hb.bahaya', 'r') as f:
+                self.high_score = int(f.readline())
+        except:
+            self.high_score = 0  
         
-        self.padding = 10 
+        #* Variabel bantuan dalam UI
+        self.padding = 10
         board_size = (self.screen_width-4*self.padding, self.screen_height-200-2*self.padding)
         self.cell_size = ((board_size[0]-(m+1)*self.padding)/m, (board_size[1]-(n+1)*self.padding)/m)
     
+        #* Init pygame dan buat window
         pygame.init()
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         self.board  = pygame.Rect((2*self.padding, 200), board_size)
         pygame.display.set_caption("Game 2048 by Rama Bena")
         self.screen.fill(Color.BACKGROUND)
 
-        #* Tombol undo dan restart
+        #* Tombol restart
         button_width  = 50
         button_height = 50
         restart_img = pygame.image.load('img/restart.png')
@@ -46,15 +55,22 @@ class Game2048:
                                                border_radius=5)
         self.screen.blit(restart_img, restart_img.get_rect(center=self.restart_board.center))
         
+        #* Tombol undo
         undo_img = pygame.image.load('img/undo.png')
         undo_board_left = self.restart_board.left - 4*self.padding - button_width
         undo_board_top  = self.board.top - 2*self.padding - button_height
-        undo_board = pygame.draw.rect(self.screen, Color.BOARD,
-                                         (undo_board_left, undo_board_top, button_width, button_height),
-                                         border_radius=5)
-        self.screen.blit(undo_img, undo_img.get_rect(center=undo_board.center))
+        self.undo_board = pygame.draw.rect(self.screen, Color.BOARD,
+                                           (undo_board_left, undo_board_top, button_width, button_height),
+                                           border_radius=5)
+        self.screen.blit(undo_img, undo_img.get_rect(center=self.undo_board.center))
 
-        self.reset()
+        #* Ambil matrix dari file kalau ada, kalau tidak buat ulang
+        try:
+            with open('data/matrix.bahaya', 'rb') as f:
+                self.matrix = f.readlines()
+            self._update_ui()
+        except:
+            self.reset()      
 
     #* ----------------------------- Public Method ---------------------------- #
     def reset(self):
@@ -62,8 +78,9 @@ class Game2048:
         # buat matrix kosong
         self.matrix:List[List[Cell]] = [] # sengaja dikasi tipe data, biar ngoding lebih cepet tinggal enter enter
 
+        # Setiap element buat object cell baru
         y = self.board.top + self.padding
-        while y < self.board.bottom:
+        while y < self.board.bottom: # Pakai while karena x,y bisa float
             row = []
             x = self.board.left + self.padding
             while x < self.board.right:
@@ -72,12 +89,10 @@ class Game2048:
             self.matrix.append(row)
             y += self.cell_size[1]+self.padding
 
-        # # isi cell random 2 kali
+        # isi cell random 2 kali
         self._place_random_cell()
         self._place_random_cell()
-
-        # Update UI
-        # self._testing()
+        
         self._update_ui()
 
     def play(self, action):
@@ -97,10 +112,8 @@ class Game2048:
             self._place_random_cell()
             if self.score > self.high_score:
                 self._update_high_score()
-
             self._update_ui()
-
-
+         
 
     #* ---------------------------- Private Method ---------------------------- #
     def _move_up(self):
@@ -282,6 +295,8 @@ class Game2048:
 
     def _update_high_score(self):
         self.high_score = self.score
+        with open('data/hb.bahaya', 'w') as f:
+            f.write(str(self.high_score))
 
     def _update_ui(self):
         #* Gambar Score dan High Score
@@ -350,6 +365,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT: # Pencet exit
                 is_running = False
+           
             if event.type == pygame.KEYDOWN: # Keyboard ditekan
                 if event.key == pygame.K_UP:
                     print("atas")
@@ -366,7 +382,15 @@ def main():
                 if event.key == pygame.K_LEFT:
                     print("kiri")
                     game.play(Move.LEFT)
-        
+            
+            if event.type == pygame.MOUSEBUTTONUP: # Klik
+                pos = pygame.mouse.get_pos()
+                print('klik')
+                if game.restart_board.collidepoint(pos): # klik restart
+                    print('klik restart')
+                    game.reset()
+
+
     print("PERMAINAN SELESAI")
 if __name__ == "__main__":
     main()
