@@ -22,6 +22,7 @@ class Game2048:
         self.speed = speed
         self.n = n
         self.m = m
+        self.high_score = 0
         
         self.padding = 10 
         board_size = (self.screen_width-4*self.padding, self.screen_height-200-2*self.padding)
@@ -29,8 +30,29 @@ class Game2048:
     
         pygame.init()
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-        self.board = pygame.Rect((2*self.padding, 200), board_size)
+        self.board  = pygame.Rect((2*self.padding, 200), board_size)
         pygame.display.set_caption("Game 2048 by Rama Bena")
+        self.screen.fill(Color.BACKGROUND)
+
+        #* Tombol undo dan restart
+        button_width  = 50
+        button_height = 50
+        restart_img = pygame.image.load('img/restart.png')
+        restart_board_left = self.board.right - 6*self.padding - button_width
+        restart_board_top  = self.board.top - 2*self.padding - button_height
+        self.restart_board = pygame.draw.rect(self.screen, Color.BOARD,
+                                               (restart_board_left, restart_board_top, button_width, button_height),
+                                               border_radius=5)
+        self.screen.blit(restart_img, restart_img.get_rect(center=self.restart_board.center))
+        
+        undo_img = pygame.image.load('img/undo.png')
+        undo_board_left = self.restart_board.left - 4*self.padding - button_width
+        undo_board_top  = self.board.top - 2*self.padding - button_height
+        undo_board = pygame.draw.rect(self.screen, Color.BOARD,
+                                         (undo_board_left, undo_board_top, button_width, button_height),
+                                         border_radius=5)
+        self.screen.blit(undo_img, undo_img.get_rect(center=undo_board.center))
+
         self.reset()
 
     #* ----------------------------- Public Method ---------------------------- #
@@ -57,7 +79,7 @@ class Game2048:
         # self._testing()
         self._update_ui()
 
-    def keyboard_listener(self):
+    def play(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT: # Pencet exit
                 return False
@@ -251,46 +273,50 @@ class Game2048:
             random_cell.set_value(2)
 
     def _update_ui(self):
-        #* Warnain background
-        self.screen.fill(Color.BACKGROUND)
+        #* Gambar Score dan High Score
+        score_board_width  = 150 #? angka ngasal
+        score_board_height = 50 #? angka ngasal
+        scores = [
+            {
+                'board_left' : self.screen.get_rect().centerx - 2*self.padding - score_board_width,
+                'board_top'  : self.screen.get_rect().top + 4*self.padding, 
+                'text'       : "SCORE",
+                'value'      : str(self.score)
+            },
+            {
+                'board_left' : self.screen.get_rect().centerx + 2*self.padding,
+                'board_top'  : self.screen.get_rect().top + 4*self.padding, 
+                'text'       : "HIGH SCORE",
+                'value'      : str(self.high_score)
+            }
+        ]
+
+        for score in scores:
+            # Gambar kotak di belakang skor
+            score_board = pygame.draw.rect(self.screen, Color.BOARD, 
+                                           (score['board_left'], score['board_top'], score_board_width, score_board_height), 
+                                           border_radius=5)
+            # Judul Skor
+            score_text = pygame.font.SysFont(name='woff', size=20).render(score['text'], True, Color.BACKGROUND)
+            self.screen.blit(score_text, score_text.get_rect(midtop=(score_board.centerx, score_board.top+self.padding)))
+            # Nilai skor
+            score_number = pygame.font.SysFont(name='woff', size=30).render(score['value'], True, Color.BACKGROUND)
+            self.screen.blit(score_number, score_number.get_rect(midbottom=score_board.midbottom))
+       
 
         #* Warnain kotak game
         pygame.draw.rect(self.screen, Color.BOARD, self.board, border_radius=20)
-
-        #* High Score
-        score_board_width  = 150 #? angka ngasal
-        score_board_height = 50 #? angka ngasal
-
-        high_score_board_left  = self.board.right - score_board_width
-        high_score_board_top   = self.screen.get_rect().top + 4*self.padding #?angka ngasal
-        high_score_board = pygame.Rect((high_score_board_left, high_score_board_top), (score_board_width, score_board_height))
-        pygame.draw.rect(self.screen, Color.BOARD, high_score_board, border_radius=5)
-
-        high_score_text = pygame.font.SysFont(name='woff', size=20).render("HIGH SCORE", True, Color.BACKGROUND)
-        self.screen.blit(high_score_text, high_score_text.get_rect(midtop=(high_score_board.centerx, high_score_board.top+self.padding)))
-        high_score_number = pygame.font.SysFont(name='woff', size=30).render("84", True, Color.BACKGROUND)
-        self.screen.blit(high_score_number, high_score_number.get_rect(midbottom=high_score_board.midbottom))
-
-        #* Score
-        score_board_left  = high_score_board.left - self.padding - score_board_width
-        score_board_top   = high_score_board_top
-        score_board = pygame.Rect((score_board_left, score_board_top), (score_board_width, high_score_board.height))
-        pygame.draw.rect(self.screen, Color.BOARD, score_board, border_radius=5)
-
-        score_text = pygame.font.SysFont(name='woff', size=20).render("SCORE", True, Color.BACKGROUND)
-        self.screen.blit(score_text, score_text.get_rect(midtop=(score_board.centerx, score_board.top+self.padding)))
-        score_number = pygame.font.SysFont(name='woff', size=30).render(str(self.score), True, Color.BACKGROUND)
-        self.screen.blit(score_number, score_number.get_rect(midbottom=score_board.midbottom))
 
         #* Setiap block nya
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[i])):
                 cell  = self.matrix[i][j]
-                block = pygame.Rect((cell.point.x, cell.point.y), self.cell_size)
-                text  = cell.text.get_rect(center=block.center)
-                
-                # Gambar Block dan text nya
-                pygame.draw.rect(self.screen, cell.color, block, border_radius=5)
+                # Gambar block
+                block = pygame.draw.rect(self.screen, cell.color, 
+                                         (cell.point.x, cell.point.y, self.cell_size[0], self.cell_size[1]), 
+                                         border_radius=5)
+                # Gambar nilai di block
+                text = cell.text.get_rect(center=block.center)
                 self.screen.blit(cell.text, text)
                 
         #* update semuanya
@@ -310,7 +336,7 @@ def main():
 
     is_running = True
     while is_running:
-        is_running = game.keyboard_listener()
+        is_running = game.play()
         
     print("PERMAINAN SELESAI")
 if __name__ == "__main__":
