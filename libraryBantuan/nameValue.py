@@ -1,10 +1,17 @@
 from collections import namedtuple
 
+Point = namedtuple('Point', ('x', 'y'))
+
+class Move:
+    UP    = [1, 0, 0, 0]
+    RIGHT = [0, 1, 0, 0]
+    DOWN  = [0, 0, 1, 0]
+    LEFT  = [0, 0, 0, 1]
+
 # Saya pakai vscode extension "Color highlight", supaya bisa kasi nama Nama rgb dan kelihatan warnanya di vscode
 def RGB(r, g, b): 
     return (r, g, b)
 
-Point = namedtuple('Point', ('x', 'y'))
 Data = namedtuple('Data', ('value', 'color', 'text_color', 'text_size'))
 
 CELL_DATA = [
