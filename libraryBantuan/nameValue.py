@@ -28,3 +28,6 @@ CELL_DATA = [
     Data(131072, RGB(33,124,190),  RGB(249,246,242), 40),
 ]
 
+class Color:
+    BACKGROUND = RGB(248,248,238)
+    BOARD = RGB(187,173,160)
