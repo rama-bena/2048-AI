@@ -1,6 +1,7 @@
+from typing import List
 import pygame
 import numpy as np
-from libraryBantuan.nameValue import RGB, Point, CELL_DATA, Color
+from libraryBantuan.nameValue import Move, Point, CELL_DATA, Color
 import random
 
 class Cell:
@@ -59,7 +60,7 @@ class Game2048:
     def reset(self):
         self.score = 0
         # buat matrix kosong
-        self.matrix = []
+        self.matrix:List[List[Cell]] = [] # sengaja dikasi tipe data, biar ngoding lebih cepet tinggal enter enter
 
         y = self.board.top + self.padding
         while y < self.board.bottom:
@@ -79,36 +80,27 @@ class Game2048:
         # self._testing()
         self._update_ui()
 
-    def play(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT: # Pencet exit
-                return False
-            if event.type == pygame.KEYDOWN: # Keyboard ditekan
-                if event.key == pygame.K_UP:
-                    print("atas")
-                    can_move = self._move_up()
-                    if can_move:
-                        self._place_random_cell()
-                        self._update_ui()
-                if event.key == pygame.K_RIGHT:
-                    print("kanan")
-                    can_move = self._move_right()
-                    if can_move:
-                        self._place_random_cell()
-                        self._update_ui()
-                if event.key == pygame.K_DOWN:
-                    print("bawah")
-                    can_move = self._move_down()
-                    if can_move:
-                        self._place_random_cell()
-                        self._update_ui()
-                if event.key == pygame.K_LEFT:
-                    print("kiri")
-                    can_move = self._move_left()
-                    if can_move:
-                        self._place_random_cell()
-                        self._update_ui()
-        return True
+    def play(self, action):
+        is_game_over = self._is_game_over()
+        
+        can_move = False
+        if action == Move.UP:
+            can_move = self._move_up()
+        elif action == Move.RIGHT:
+            can_move = self._move_right()
+        elif action == Move.DOWN:
+            can_move = self._move_down()
+        elif action == Move.LEFT:
+            can_move = self._move_left()
+        
+        if can_move:
+            self._place_random_cell()
+            if self.score > self.high_score:
+                self._update_high_score()
+
+            self._update_ui()
+
+
 
     #* ---------------------------- Private Method ---------------------------- #
     def _move_up(self):
@@ -272,6 +264,25 @@ class Game2048:
         else:
             random_cell.set_value(2)
 
+    def _is_game_over(self):
+        is_game_over = True
+        adjacent = [(-1, 0), (0, 1), (1, 0), (-1, 0)]
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix[i])):
+                if self.matrix[i][j].value == 1: # Cek jika masih kosong, belum game over
+                    return False
+                for idx in range(4): # Cek jika disekitarnya nilainya sama, belum game over
+                    next_i = i+adjacent[idx][0]
+                    next_j = j+adjacent[idx][1]
+                    if (0 <= next_i < len(self.matrix)) and (0 <= next_j < len(self.matrix[i])): # masih dalam kotak
+                        if self.matrix[i][j].value == self.matrix[next_i][next_j].value:
+                            return False
+        print('game over')
+        return is_game_over
+
+    def _update_high_score(self):
+        self.high_score = self.score
+
     def _update_ui(self):
         #* Gambar Score dan High Score
         score_board_width  = 150 #? angka ngasal
@@ -336,7 +347,25 @@ def main():
 
     is_running = True
     while is_running:
-        is_running = game.play()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: # Pencet exit
+                is_running = False
+            if event.type == pygame.KEYDOWN: # Keyboard ditekan
+                if event.key == pygame.K_UP:
+                    print("atas")
+                    game.play(Move.UP)
+
+                if event.key == pygame.K_RIGHT:
+                    print("kanan")
+                    game.play(Move.RIGHT)
+
+                if event.key == pygame.K_DOWN:
+                    print("bawah")
+                    game.play(Move.DOWN)
+                    
+                if event.key == pygame.K_LEFT:
+                    print("kiri")
+                    game.play(Move.LEFT)
         
     print("PERMAINAN SELESAI")
 if __name__ == "__main__":
