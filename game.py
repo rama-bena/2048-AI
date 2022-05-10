@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from libraryBantuan.nameValue import RGB, Point, CELL_DATA
+from libraryBantuan.nameValue import RGB, Point, CELL_DATA, Color
 import random
 
 class Cell:
@@ -251,17 +251,38 @@ class Game2048:
             random_cell.set_value(2)
 
     def _update_ui(self):
-        # Warnain background
-        self.screen.fill(RGB(248,248,238))
+        #* Warnain background
+        self.screen.fill(Color.BACKGROUND)
 
-        # Warnain kotak game
-        pygame.draw.rect(self.screen, RGB(187,173,160), self.board, border_radius=20)
-        print(f"x,y:{self.board.x}, {self.board.y}")
-        print(f"center: {self.board.center}")
-        print(f"widht height: {self.board.width} {self.board.height}")
-        print(f"left: {self.board.left}")
-        print(f"right: {self.board.right}")
-        # Setiap block nya
+        #* Warnain kotak game
+        pygame.draw.rect(self.screen, Color.BOARD, self.board, border_radius=20)
+
+        #* High Score
+        score_board_width  = 150 #? angka ngasal
+        score_board_height = 50 #? angka ngasal
+
+        high_score_board_left  = self.board.right - score_board_width
+        high_score_board_top   = self.screen.get_rect().top + 4*self.padding #?angka ngasal
+        high_score_board = pygame.Rect((high_score_board_left, high_score_board_top), (score_board_width, score_board_height))
+        pygame.draw.rect(self.screen, Color.BOARD, high_score_board, border_radius=5)
+
+        high_score_text = pygame.font.SysFont(name='woff', size=20).render("HIGH SCORE", True, Color.BACKGROUND)
+        self.screen.blit(high_score_text, high_score_text.get_rect(midtop=(high_score_board.centerx, high_score_board.top+self.padding)))
+        high_score_number = pygame.font.SysFont(name='woff', size=30).render("84", True, Color.BACKGROUND)
+        self.screen.blit(high_score_number, high_score_number.get_rect(midbottom=high_score_board.midbottom))
+
+        #* Score
+        score_board_left  = high_score_board.left - self.padding - score_board_width
+        score_board_top   = high_score_board_top
+        score_board = pygame.Rect((score_board_left, score_board_top), (score_board_width, high_score_board.height))
+        pygame.draw.rect(self.screen, Color.BOARD, score_board, border_radius=5)
+
+        score_text = pygame.font.SysFont(name='woff', size=20).render("SCORE", True, Color.BACKGROUND)
+        self.screen.blit(score_text, score_text.get_rect(midtop=(score_board.centerx, score_board.top+self.padding)))
+        score_number = pygame.font.SysFont(name='woff', size=30).render(str(self.score), True, Color.BACKGROUND)
+        self.screen.blit(score_number, score_number.get_rect(midbottom=score_board.midbottom))
+
+        #* Setiap block nya
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[i])):
                 cell  = self.matrix[i][j]
@@ -272,7 +293,7 @@ class Game2048:
                 pygame.draw.rect(self.screen, cell.color, block, border_radius=5)
                 self.screen.blit(cell.text, text)
                 
-        # update semuanya
+        #* update semuanya
         pygame.display.flip()
 
     def _testing(self):
