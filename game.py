@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from libraryBantuan.nameValue import CELL_DATA, Point
+from libraryBantuan.nameValue import RGB, Point, CELL_DATA
 import random
 
 class Cell:
@@ -13,21 +13,23 @@ class Cell:
         self.value = CELL_DATA[index].value
         self.color = CELL_DATA[index].color
         text = "" if self.value == 1 else str(self.value)
-        self.text  = pygame.font.SysFont('woff', CELL_DATA[index].text_size).render(text, True, CELL_DATA[index].text_color)
+        self.text  = pygame.font.SysFont(name='woff', size=CELL_DATA[index].text_size).render(text, True, CELL_DATA[index].text_color)
 
 class Game2048:
-    def __init__(self, screen_width=400, screen_height=400, speed=40, width=4, height=4):
+    def __init__(self, screen_width=480, screen_height=640, speed=40, n=4, m=4):
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.speed = speed
-        self.width = width
-        self.height = height
-        self.block_size_width = self.screen_width // self.width
-        self.block_size_height = self.screen_height // self.height
-        self.padding = 20
-
+        self.n = n
+        self.m = m
+        
+        self.padding = 10 
+        board_size = (self.screen_width-4*self.padding, self.screen_height-200-2*self.padding)
+        self.cell_size = ((board_size[0]-(m+1)*self.padding)/m, (board_size[1]-(n+1)*self.padding)/m)
+    
         pygame.init()
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.board = pygame.Rect((2*self.padding, 200), board_size)
         pygame.display.set_caption("Game 2048 by Rama Bena")
         self.reset()
 
@@ -36,17 +38,23 @@ class Game2048:
         self.score = 0
         # buat matrix kosong
         self.matrix = []
-        for y in range(self.padding//2, self.screen_width, self.block_size_width):
+
+        y = self.board.top + self.padding
+        while y < self.board.bottom:
             row = []
-            for x in range(self.padding//2, self.screen_height, self.block_size_height):
+            x = self.board.left + self.padding
+            while x < self.board.right:
                 row.append(Cell(x, y))
+                x += self.cell_size[0]+self.padding
             self.matrix.append(row)
-        
-        # isi cell random 2 kali
+            y += self.cell_size[1]+self.padding
+
+        # # isi cell random 2 kali
         self._place_random_cell()
         self._place_random_cell()
 
         # Update UI
+        # self._testing()
         self._update_ui()
 
     def keyboard_listener(self):
@@ -244,18 +252,26 @@ class Game2048:
 
     def _update_ui(self):
         # Warnain background
-        self.screen.fill((187,173,160))
+        self.screen.fill(RGB(248,248,238))
 
+        # Warnain kotak game
+        pygame.draw.rect(self.screen, RGB(187,173,160), self.board, border_radius=20)
+        print(f"x,y:{self.board.x}, {self.board.y}")
+        print(f"center: {self.board.center}")
+        print(f"widht height: {self.board.width} {self.board.height}")
+        print(f"left: {self.board.left}")
+        print(f"right: {self.board.right}")
         # Setiap block nya
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[i])):
-                cell       = self.matrix[i][j]
-                block      = pygame.Rect((cell.point.x, cell.point.y), (self.block_size_width-self.padding, self.block_size_height-self.padding))
-                point_text = (cell.point.x + self.padding, cell.point.y + self.padding)
+                cell  = self.matrix[i][j]
+                block = pygame.Rect((cell.point.x, cell.point.y), self.cell_size)
+                text  = cell.text.get_rect(center=block.center)
                 
                 # Gambar Block dan text nya
-                pygame.draw.rect(self.screen, cell.color, block)
-                self.screen.blit(cell.text, point_text)
+                pygame.draw.rect(self.screen, cell.color, block, border_radius=5)
+                self.screen.blit(cell.text, text)
+                
         # update semuanya
         pygame.display.flip()
 
