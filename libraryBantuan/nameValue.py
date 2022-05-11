@@ -1,6 +1,13 @@
 from collections import namedtuple
 
-Point = namedtuple('Point', ('x', 'y'))
+class FileName:
+    MATRIX      = 'data/matrix.bahaya'
+    HIGH_SCORE  = 'data/hs.bahaya'
+    SCORE       = 'data/s.bahaya'
+    UNDO_IMG    = 'assets/img/undo.png'
+    RESTART_IMG = 'assets/img/restart.png'
+
+
 
 class Move:
     UP    = [1, 0, 0, 0]
