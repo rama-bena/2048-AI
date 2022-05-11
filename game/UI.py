@@ -118,3 +118,14 @@ class UserInterface:
                 # Gambar nilai di block
                 text = cell.text.get_rect(center=block.center)
                 self.screen.blit(cell.text, text)
+
+    def game_over(self):
+        game_over_surface = pygame.Surface(self.game_board.size)
+        game_over_surface.set_alpha(128)
+        game_over_surface.fill(Color.BOARD)
+    
+        self.screen.blit(game_over_surface, self.game_board.topleft)
+
+        game_over_text = pygame.font.SysFont(name='woff', size=100).render("GAME OVER", True, Color.BACKGROUND)
+        self.screen.blit(game_over_text, game_over_text.get_rect(center=self.game_board.center))
+        pygame.display.flip()

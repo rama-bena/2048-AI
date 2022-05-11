@@ -28,6 +28,9 @@ class Game2048:
                 self.matrix = pickle.load(f)
             with open(FileName.SCORE, 'r') as f:
                 self.score = int(float(f.readline()))
+
+            self.undo_matrix = copy.deepcopy(self.matrix)
+            self.undo_score  = self.score
             self._update_data(self.matrix)
         except:
             self.reset()
@@ -49,8 +52,6 @@ class Game2048:
         self._update_data(self.matrix)    
     
     def play(self, action):
-        is_game_over = self._is_game_over()
-       
         next_matrix = copy.deepcopy(self.matrix)
         next_score  = self.score 
         if action == Move.UP:
@@ -72,6 +73,9 @@ class Game2048:
             
             self._place_random_cell()
             self._update_data(self.matrix)
+        
+        if self._is_game_over():
+            self.ui.game_over()
          
     def undo(self):
         self.matrix = copy.deepcopy(self.undo_matrix)
