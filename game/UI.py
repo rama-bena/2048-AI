@@ -2,7 +2,7 @@ from typing import List
 import pygame
 from collections import namedtuple
 
-from libraryBantuan.nameValue import Move, CELL_DATA, Color, FileName
+from libraryBantuan.nameValue import Color, FileName
 from .cell import Cell
 
 Size  = namedtuple('Size', ('width', 'height'))

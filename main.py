@@ -1,7 +1,6 @@
 import pygame
 from libraryBantuan.nameValue import Move
 from game.game import Game2048
-from game.UI import UserInterface
 
 
 if __name__ == "__main__":
@@ -54,6 +53,4 @@ if __name__ == "__main__":
                 click_pos = (0,0)
                 print('klik restart')
                 game.reset()
-
-
     print("PERMAINAN SELESAI")
