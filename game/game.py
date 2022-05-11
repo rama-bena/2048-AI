@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 import random
+import copy 
 
 from libraryBantuan.nameValue import Move, FileName
 from .UI import UserInterface
@@ -12,6 +13,7 @@ class Game2048:
         self.row = row
         self.column = column
         self.ui = UserInterface(screen_width=480, screen_height=640, row=4, column=4)
+        
 
         #* Ambil high score dari file atau 0
         try:
@@ -24,196 +26,175 @@ class Game2048:
         try:
             with open(FileName.MATRIX, 'rb') as f:
                 self.matrix = pickle.load(f)
-                self.score = 0
-                for row in self.matrix:
-                    self.score += np.sum([i for i in row if i != 1])
-            self.ui.update(self.matrix, self.score, self.high_score)
-            self._print_matrix()
+            with open(FileName.SCORE, 'r') as f:
+                self.score = int(float(f.readline()))
+            self._update_data(self.matrix)
         except:
             self.reset()
-
-    #* ----------------------------- Public Method ---------------------------- #
-    def play(self, action):
-        is_game_over = self._is_game_over()
-        
-        can_move = False
-        if action == Move.UP:
-            can_move = self._move_up()
-        elif action == Move.RIGHT:
-            can_move = self._move_right()
-        elif action == Move.DOWN:
-            can_move = self._move_down()
-        elif action == Move.LEFT:
-            can_move = self._move_left()
-        
-        if can_move:
-            self._place_random_cell()
-            if self.score > self.high_score:
-                self._update_high_score()
-            
-            self._update_matrix()
-            self.ui.update(self.matrix, self.score, self.high_score)
-            self._print_matrix()
-         
-    def undo(self):
-        pass
     
+    #* ----------------------------- Public Method ---------------------------- #
     def reset(self):
         self.score = 0
-        
         self.matrix = [[1 for j in range(self.column)] for i in range(self.row)]
-
-        # isi cell random 2 kali
-        self._place_random_cell()
-        self._place_random_cell()
         
-        # simpan di file
-        self._update_matrix()
+        #* isi cell random 2 kali
+        self._place_random_cell()
+        self._place_random_cell()
 
-        self.ui.update(self.matrix, self.score, self.high_score)
-        self._print_matrix()
+        #* Undo=aslinya / gak bisa undo
+        self.undo_matrix = copy.deepcopy(self.matrix)
+        self.undo_score  = self.score
 
+        #* Update data
+        self._update_data(self.matrix)    
+    
+    def play(self, action):
+        is_game_over = self._is_game_over()
+       
+        next_matrix = copy.deepcopy(self.matrix)
+        next_score  = self.score 
+        if action == Move.UP:
+            next_matrix, next_score = self._move_up(next_matrix, next_score)
+        elif action == Move.RIGHT:
+            next_matrix, next_score = self._move_right(next_matrix, next_score)
+        elif action == Move.DOWN:
+            next_matrix, next_score = self._move_down(next_matrix, next_score)
+        elif action == Move.LEFT:
+            next_matrix, next_score = self._move_left(next_matrix, next_score)
+        
+        #* Bisa gerak
+        if next_matrix != self.matrix: 
+            self.undo_matrix = copy.deepcopy(self.matrix)
+            self.undo_score  = self.score
+
+            self.matrix = next_matrix
+            self.score  = next_score
+            
+            self._place_random_cell()
+            self._update_data(self.matrix)
+         
+    def undo(self):
+        self.matrix = copy.deepcopy(self.undo_matrix)
+        self.score  = self.undo_score 
+        self._update_data(self.matrix)
+        
     #* ---------------------------- Private Method ---------------------------- #
-    def _move_up(self):
-        can_move = False
+    def _move_up(self, matrix, score):
         for j in range(self.column):
             already_collision = False
             for i in range(1, self.row):
-                value_now = self.matrix[i][j]
+                value_now = matrix[i][j]
                 if value_now == 1:
                     continue
                 next_cell = i-1
-                while self.matrix[next_cell][j] == 1:
+                while matrix[next_cell][j] == 1:
                     next_cell -= 1
                     if next_cell == -1: # keluar batas
                         break
                 
                 if next_cell == -1:                               # Taruh di akhir
-                    can_move = True
-                    self.matrix[0][j] = value_now
-                    self.matrix[i][j] = 1
-
-                elif self.matrix[next_cell][j] == value_now:    # Cell nya sama
-                    can_move = True
-                    self.matrix[i][j] = 1
+                    matrix[0][j] = value_now
+                    matrix[i][j] = 1
+                elif matrix[next_cell][j] == value_now:    # Cell nya sama
+                    matrix[i][j] = 1
                     if not already_collision:       # Belum pernah collision
                         already_collision = True
-                        self.matrix[next_cell][j] = 2*value_now
-                        self.score += (2*value_now)
+                        matrix[next_cell][j] = 2*value_now
+                        score += 2*value_now
                     else:               # kalau sudah pernah collicion -> taruh disampingnya
-                        self.matrix[next_cell+1][j] = value_now
+                        matrix[next_cell+1][j] = value_now
+                elif (matrix[next_cell][j] != value_now) and (next_cell != i-1):    # ada cell, cell nya beda dan tidak disamping
+                    matrix[next_cell+1][j] = value_now
+                    matrix[i][j] = 1
+        return (matrix, score)
 
-                elif (self.matrix[next_cell][j] != value_now) and (next_cell != i-1):    # ada cell, cell nya beda dan tidak disamping
-                    can_move = True
-                    self.matrix[next_cell+1][j] = value_now
-                    self.matrix[i][j] = 1
-        return can_move
-
-    def _move_right(self):
-        can_move = False
+    def _move_right(self, matrix, score):
         for i in range(self.row):
             already_collision = False
             for j in range(self.column-2, -1, -1):
-                value_now = self.matrix[i][j]
+                value_now = matrix[i][j]
                 if value_now == 1:
                     continue
                 next_cell = j+1
-                while self.matrix[i][next_cell] == 1:
+                while matrix[i][next_cell] == 1:
                     next_cell += 1
                     if next_cell == self.column: # keluar batas
                         break
                 
                 if next_cell == self.column:                               # keluar batas
-                    can_move = True
-                    self.matrix[i][self.column-1] = value_now
-                    self.matrix[i][j] = 1
-                
-                elif self.matrix[i][next_cell] == value_now:    # Cell nya sama
-                    can_move = True
-                    self.matrix[i][j] = 1
+                    matrix[i][self.column-1] = value_now
+                    matrix[i][j] = 1
+                elif matrix[i][next_cell] == value_now:    # Cell nya sama
+                    matrix[i][j] = 1
                     if not already_collision:       # Belum pernah collision
                         already_collision = True
-                        self.matrix[i][next_cell] = 2*value_now
-                        self.score += (2*value_now)
+                        matrix[i][next_cell] = 2*value_now
+                        score += 2*value_now
                     else:                           # kalau sudah pernah collicion -> taruh disampingnya
-                        self.matrix[i][next_cell-1] = value_now
-                
-                elif (self.matrix[i][next_cell] != value_now) and (next_cell != j+1):                                             # cell nya beda dan tidak disamping
-                    can_move = True
-                    self.matrix[i][next_cell-1] = value_now
-                    self.matrix[i][j] = 1
+                        matrix[i][next_cell-1] = value_now         
+                elif (matrix[i][next_cell] != value_now) and (next_cell != j+1): # cell nya beda dan tidak disamping
+                    matrix[i][next_cell-1] = value_now
+                    matrix[i][j] = 1
 
-        return can_move
+        return (matrix, score)
     
-    def _move_down(self):
-        can_move = False
+    def _move_down(self, matrix, score):
         for j in range(self.column):
             already_collision = False
             for i in range(self.row-2, -1, -1):
-                value_now = self.matrix[i][j]
+                value_now = matrix[i][j]
                 if value_now == 1:
                     continue
                 next_cell = i+1
-                while self.matrix[next_cell][j] == 1:
+                while matrix[next_cell][j] == 1:
                     next_cell += 1
                     if next_cell == self.row: # keluar batas
                         break
-                
                 if next_cell == self.row:                               # Taruh di akhir
-                    can_move = True
-                    self.matrix[self.row-1][j] = value_now
-                    self.matrix[i][j] = 1
-                elif self.matrix[next_cell][j] == value_now:           # Cell nya sama
-                    can_move = True
-                    self.matrix[i][j] = 1
+                    matrix[self.row-1][j] = value_now
+                    matrix[i][j] = 1
+                elif matrix[next_cell][j] == value_now:           # Cell nya sama
+                    matrix[i][j] = 1
                     if not already_collision:
                         already_collision = True
-                        self.matrix[next_cell][j] = 2*value_now
-                        self.score += (2*value_now)
+                        matrix[next_cell][j] = 2*value_now
+                        score += 2*value_now
                     else:
-                        self.matrix[next_cell-1][j] = value_now
+                        matrix[next_cell-1][j] = value_now
+                elif (matrix[next_cell][j] != value_now) and (next_cell != i+1):    # ada cell, cell nya beda
+                    matrix[next_cell-1][j] = value_now
+                    matrix[i][j] = 1
 
-                elif (self.matrix[next_cell][j] != value_now) and (next_cell != i+1):    # ada cell, cell nya beda
-                    can_move = True
-                    self.matrix[next_cell-1][j] = value_now
-                    self.matrix[i][j] = 1
-
-        return can_move
+        return (matrix, score)
     
-    def _move_left(self):
-        can_move = False
+    def _move_left(self, matrix, score):
         for i in range(self.row):
             already_collision = False
             for j in range(1, self.column):
-                value_now = self.matrix[i][j]
+                value_now = matrix[i][j]
                 if value_now == 1:
                     continue
                 next_cell = j-1
-                while self.matrix[i][next_cell] == 1:
+                while matrix[i][next_cell] == 1:
                     next_cell -= 1
                     if next_cell == -1: # keluar batas
                         break
                 
                 if next_cell == -1:                               # Taruh di akhir
-                    can_move = True
-                    self.matrix[i][0] = value_now
-                    self.matrix[i][j] = 1
-               
-                elif self.matrix[i][next_cell] == value_now:    # Cell nya sama
-                    can_move = True
-                    self.matrix[i][j] = 1
+                    matrix[i][0] = value_now
+                    matrix[i][j] = 1  
+                elif matrix[i][next_cell] == value_now:    # Cell nya sama
+                    matrix[i][j] = 1
                     if not already_collision:
                         already_collision = True
-                        self.matrix[i][next_cell] = 2*value_now
-                        self.score += (2*value_now)
+                        matrix[i][next_cell] = 2*value_now
+                        score += 2*value_now
                     else:
-                        self.matrix[i][next_cell+1] = value_now
-
-                elif (self.matrix[i][next_cell] != value_now) and (next_cell != j-1):                                             # ada cell, cell nya beda
-                    can_move = True
-                    self.matrix[i][next_cell+1] = value_now
-                    self.matrix[i][j] = 1
-        return can_move
+                        matrix[i][next_cell+1] = value_now
+                elif (matrix[i][next_cell] != value_now) and (next_cell != j-1):                                             # ada cell, cell nya beda
+                    matrix[i][next_cell+1] = value_now
+                    matrix[i][j] = 1
+        return (matrix, score)
 
     def _place_random_cell(self):
         candidate_cell = []
@@ -245,24 +226,20 @@ class Game2048:
         print('game over')
         return True
 
-    def _update_high_score(self):
-        self.high_score = self.score
-        with open(FileName.HIGH_SCORE, 'w') as f:
-            f.write(str(self.high_score))
+    def _update_data(self, matrix):
+        #* Jika score > high_score, simpan high score
+        if self.score > self.high_score:
+            self.high_score = self.score
+            with open(FileName.HIGH_SCORE, 'w') as f:
+                f.write(str(self.high_score))
 
-    def _update_matrix(self):
+        #* Simpan score
+        with open(FileName.SCORE, 'w') as f:
+            f.write(str(self.score))
+
+        #* Simpan matrix
         with open(FileName.MATRIX, 'wb') as f:
-            pickle.dump(self.matrix, f)
+            pickle.dump(matrix, f)
 
-    def _print_matrix(self):
-        for i in range(self.row):
-            for j in range(self.column):
-                print(self.matrix[i][j], end=' ')
-            print()
-
-    def _testing(self):
-        now = 4
-        for i in range(self.row):
-            for j in range(self.column):
-                self.matrix[i][j] = now
-                now *= 2
+        #* Update UI
+        self.ui.update(matrix, self.score, self.high_score)
