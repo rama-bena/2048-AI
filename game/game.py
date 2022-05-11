@@ -33,21 +33,6 @@ class Game2048:
             self.reset()
 
     #* ----------------------------- Public Method ---------------------------- #
-    def reset(self):
-        self.score = 0
-        
-        self.matrix = [[1 for j in range(self.column)] for i in range(self.row)]
-
-        # isi cell random 2 kali
-        self._place_random_cell()
-        self._place_random_cell()
-        
-        # simpan di file
-        self._update_matrix()
-
-        self.ui.update(self.matrix, self.score, self.high_score)
-        self._print_matrix()
-
     def play(self, action):
         is_game_over = self._is_game_over()
         
@@ -70,6 +55,23 @@ class Game2048:
             self.ui.update(self.matrix, self.score, self.high_score)
             self._print_matrix()
          
+    def undo(self):
+        pass
+    
+    def reset(self):
+        self.score = 0
+        
+        self.matrix = [[1 for j in range(self.column)] for i in range(self.row)]
+
+        # isi cell random 2 kali
+        self._place_random_cell()
+        self._place_random_cell()
+        
+        # simpan di file
+        self._update_matrix()
+
+        self.ui.update(self.matrix, self.score, self.high_score)
+        self._print_matrix()
 
     #* ---------------------------- Private Method ---------------------------- #
     def _move_up(self):
