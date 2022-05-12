@@ -54,8 +54,6 @@ class Game2048:
             if self.score > self.high_score:
                 self.high_score = self.score
 
-        state = self.get_state()
-
         #* Cek game over
         game_over = self._is_game_over()
 
@@ -67,7 +65,7 @@ class Game2048:
         # update data ke file dan UI
         self.ui.update(self.matrix, self.score, self.high_score)
         
-        return state, reward, game_over
+        return reward, game_over
         
     def get_state(self):
         state = []

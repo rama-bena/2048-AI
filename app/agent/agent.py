@@ -1,39 +1,56 @@
+import torch
 import random
 from collections import deque
+
 from app.game.game import Game2048
-# from app.model.model import *
+from app.model.model import Linear_QNet, QTrainer
 
 
 class Agent:
-    def __init__(self, max_memory=10_000):
+    def __init__(self, max_memory=100_000, batch_size=1000, epsilon=100, learning_rate=0.001, gamma=0.95):
+        self.BATCH_SIZE = batch_size
         self.epsilon = 100
         self.n_games = 0
         self.memory = deque(maxlen=max_memory)
+        self.model = Linear_QNet(16, 8, 8, 4)
+        self.trainer = QTrainer(self.model, learning_rate, gamma=gamma)
 
     #* ----------------------------- Public Method ---------------------------- #
 
     def find_action(self, state):
         final_move = [0, 0, 0, 0]
-        # new_epsilon = self.epsilon - (2 * self.n_games)
-        new_epsilon = 100
+        new_epsilon = self.epsilon - (10 * self.n_games)
         if random.randint(1, 100) <= new_epsilon:
             idx = random.randint(0, 3)
             final_move[idx] = 1
         else:
-            final_move = [1, 0, 0, 0]
+            # Jadikan bentuk tensor dulu statenya
+            state = torch.tensor(state, dtype=torch.float)
+            # Lakukan prediksi gerakan
+            prediction = self.model(state)
+            # Ambil gerakan yang nilainya paling tinggi
+            move = torch.argmax(prediction).item()
+            final_move[move] = 1
 
         return final_move
 
     
-    def remember(self, state_old, action, state, reward, game_over):
-        if (state_old, action, state, reward, game_over) not in self.memory:
-            self.memory.append((state_old, action, state, reward, game_over))
+    def remember(self, state, action, reward, next_state, game_over):
+        if (state, action, reward, next_state, game_over) not in self.memory:
+            self.memory.append((state, action, reward, next_state, game_over))
 
-    def train_short_memory(self, state_old, action, state, reward, game_over):
-        pass
+    def train_short_memory(self, state, action, reward, next_state, game_over):
+        self.trainer.train_step(state, action, reward, next_state, game_over)
 
     def train_long_memory(self):
-        pass
+        ## Ambil sampel dari memory sebanyak batch_size atau seluruh memory jika memory lebih kecil dari batch_size
+        # mini_size = min(len(self.memory), self.BATCH_SIZE)
+        # mini_sample = random.sample(self.memory, mini_size)
+        mini_sample = self.memory #? gak pakek batch. Kode diatas pakai batch
+        
+        # Ekstrak setiap paramater lalu train
+        states, actions, rewards, next_states, game_overs = zip(*mini_sample)
+        self.trainer.train_step(states, actions, rewards, next_states, game_overs)
 
     
     #* ---------------------------- Private Method ---------------------------- #

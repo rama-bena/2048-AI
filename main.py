@@ -14,23 +14,25 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT: # Pencet exit
                 is_running = False
         
-        state_old = game.get_state()
+        state = game.get_state()
         print('STATE OLD')
         game.print_matrix()
 
-        action = agent.find_action(state_old)
+        action = agent.find_action(state)
         print(f"Action : {action}")
 
-        state, reward, game_over = game.play(action)
-        print("STATE NEW")
-        game.print_matrix()
+        reward, game_over = game.play(action)
         print(f"Reward:{reward}; game_over:{game_over}")
+        
+        print("STATE NEW")
+        next_state = game.get_state()
+        game.print_matrix()
         print()
-        agent.remember(state_old, action, state, reward, game_over)
-        agent.train_short_memory(state_old, action, state, reward, game_over)
+
+        agent.remember(state, action, reward, next_state, game_over)
+        agent.train_short_memory(state, action, reward, next_state, game_over)
 
         if game_over:
-            time.sleep(5)
             game.reset()
             agent.n_games += 1
             agent.train_long_memory()
