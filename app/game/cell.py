@@ -11,6 +11,8 @@ class Cell:
         self.set_value()
 
     def set_value(self, value=1):
+        if value == 0:
+            value = 1
         index = int(np.log2(value))
         self.value = CELL_DATA[index].value
         self.color = CELL_DATA[index].color

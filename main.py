@@ -1,56 +1,37 @@
 import pygame
 from libraryBantuan.nameValue import Move
-from game.game import Game2048
-
+from app.game.game import Game2048
+from app.agent.agent import Agent
+import time
 
 if __name__ == "__main__":
+    agent = Agent()
     game = Game2048()
-    undo_button    = game.ui.undo_board
-    restart_button = game.ui.restart_board
-
-    click_pos = (0, 0)
-    release_pos = (0, 0)
 
     is_running = True
     while is_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: # Pencet exit
                 is_running = False
-           
-            if event.type == pygame.KEYDOWN: # Keyboard ditekan
-                if event.key == pygame.K_UP:
-                    print("atas")
-                    game.play(Move.UP)
+        
+        state_old = game.get_state()
+        print('STATE OLD')
+        game.print_matrix()
 
-                if event.key == pygame.K_RIGHT:
-                    print("kanan")
-                    game.play(Move.RIGHT)
+        action = agent.find_action(state_old)
+        print(f"Action : {action}")
 
-                if event.key == pygame.K_DOWN:
-                    print("bawah")
-                    game.play(Move.DOWN)
-                    
-                if event.key == pygame.K_LEFT:
-                    print("kiri")
-                    game.play(Move.LEFT)
-            
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                click_pos = pygame.mouse.get_pos()
-                print('klik')
-    
-            if event.type == pygame.MOUSEBUTTONUP:
-                release_pos = pygame.mouse.get_pos()
-                print('lepas')
-            else:
-                release_pos = (0,0)
-    
-            if undo_button.collidepoint(click_pos) and undo_button.collidepoint(release_pos): # klik undo
-                click_pos = (0,0)
-                print('klik undo')
-                game.undo()
+        state, reward, game_over = game.play(action)
+        print("STATE NEW")
+        game.print_matrix()
+        print(f"Reward:{reward}; game_over:{game_over}")
+        print()
+        agent.remember(state_old, action, state, reward, game_over)
+        agent.train_short_memory(state_old, action, state, reward, game_over)
 
-            if restart_button.collidepoint(click_pos) and restart_button.collidepoint(release_pos): # klik restart
-                click_pos = (0,0)
-                print('klik restart')
-                game.reset()
-    print("PERMAINAN SELESAI")
+        if game_over:
+            time.sleep(5)
+            game.reset()
+            agent.n_games += 1
+            agent.train_long_memory()
+        
