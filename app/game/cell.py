@@ -16,5 +16,4 @@ class Cell:
         index = int(np.log2(value))
         self.value = CELL_DATA[index].value
         self.color = CELL_DATA[index].color
-        text = "" if self.value == 1 else str(self.value)
-        self.text  = pygame.font.SysFont(name='woff', size=CELL_DATA[index].text_size).render(text, True, CELL_DATA[index].text_color)
+        self.text  = CELL_DATA[index].text

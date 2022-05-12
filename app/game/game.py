@@ -2,8 +2,8 @@ import numpy as np
 import random
 import copy 
 
-from libraryBantuan.nameValue import Move, FileName
 from .UI import UserInterface
+from libraryBantuan.nameValue import Move
 
 
 
@@ -55,17 +55,17 @@ class Game2048:
                 self.high_score = self.score
 
         #* Cek game over
-        game_over = self._is_game_over()
+        game_over = self._is_game_over() or self.iteration >= 10
 
         if game_over:
             reward = -1000
         else:
-            reward = np.log2(plus_score) if plus_score!=0 else -100
+            reward = plus_score if plus_score!=0 else -10
 
         # update data ke file dan UI
         self.ui.update(self.matrix, self.score, self.high_score)
         
-        return reward, game_over
+        return plus_score, reward, game_over
         
     def get_state(self):
         state = []
@@ -226,8 +226,7 @@ class Game2048:
                     if (0 <= next_i < self.row) and (0 <= next_j < self.column): # masih dalam kotak
                         if self.matrix[i][j] == self.matrix[next_i][next_j]:
                             return False
-        print('game over')
-        return self.iteration >=10
+        return True
 
     
 
