@@ -7,8 +7,6 @@ class FileName:
     UNDO_IMG    = 'assets/img/undo.png'
     RESTART_IMG = 'assets/img/restart.png'
 
-
-
 class Move:
     UP    = [1, 0, 0, 0]
     RIGHT = [0, 1, 0, 0]
@@ -19,8 +17,11 @@ class Move:
 def RGB(r, g, b): 
     return (r, g, b)
 
-Data = namedtuple('Data', ('value', 'color', 'text_color', 'text_size'))
+class Color:
+    BACKGROUND = RGB(248,248,238)
+    BOARD = RGB(187,173,160)
 
+Data = namedtuple('Data', ('value', 'color', 'text_color', 'text_size'))
 CELL_DATA = [
     Data(1,      RGB(205,193,180), RGB(119,110,101), 80),
     Data(2,      RGB(238,228,218), RGB(119,110,101), 80),
@@ -41,7 +42,3 @@ CELL_DATA = [
     Data(65536,  RGB(92,160,222),  RGB(249,246,242), 40),
     Data(131072, RGB(33,124,190),  RGB(249,246,242), 40),
 ]
-
-class Color:
-    BACKGROUND = RGB(248,248,238)
-    BOARD = RGB(187,173,160)

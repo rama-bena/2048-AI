@@ -38,14 +38,14 @@ if __name__ == "__main__":
                 click_pos = pygame.mouse.get_pos()
                 print('klik')
     
-            if event.type == pygame.MOUSEBUTTONUP: # Klik
+            if event.type == pygame.MOUSEBUTTONUP:
                 release_pos = pygame.mouse.get_pos()
                 print('lepas')
             else:
                 release_pos = (0,0)
     
             if undo_button.collidepoint(click_pos) and undo_button.collidepoint(release_pos): # klik undo
-                click_pos, release_pos = (0,0), (0,0)
+                click_pos = (0,0)
                 print('klik undo')
                 game.undo()
 

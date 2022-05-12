@@ -14,7 +14,6 @@ class Game2048:
         self.column = column
         self.ui = UserInterface(screen_width=480, screen_height=640, row=4, column=4)
         
-
         #* Ambil high score dari file atau 0
         try:
             with open(FileName.HIGH_SCORE, 'r') as f:
@@ -22,17 +21,19 @@ class Game2048:
         except:
             self.high_score = 0  
 
-        #* Ambil matrix dan score dari file kalau ada, kalau tidak buat ulang
+        #* Ambil matrix dan score dari file kalau ada
         try:
             with open(FileName.MATRIX, 'rb') as f:
                 self.matrix = pickle.load(f)
             with open(FileName.SCORE, 'r') as f:
                 self.score = int(float(f.readline()))
 
+            # pertama kali undo sama dengan nilai aslinya
             self.undo_matrix = copy.deepcopy(self.matrix)
             self.undo_score  = self.score
+            # terakhir update data dan ui
             self._update_data(self.matrix)
-        except:
+        except: # kalau tidak ada, buat ulang
             self.reset()
     
     #* ----------------------------- Public Method ---------------------------- #
@@ -52,6 +53,7 @@ class Game2048:
         self._update_data(self.matrix)    
     
     def play(self, action):
+        #* Lakukan action
         next_matrix = copy.deepcopy(self.matrix)
         next_score  = self.score 
         if action == Move.UP:
@@ -64,16 +66,19 @@ class Game2048:
             next_matrix, next_score = self._move_left(next_matrix, next_score)
         
         #* Bisa gerak
-        if next_matrix != self.matrix: 
+        if next_matrix != self.matrix:
+            # simpan nilai sebelumnya ke undo
             self.undo_matrix = copy.deepcopy(self.matrix)
             self.undo_score  = self.score
-
+            # ubah matrix dan score sesuai hasil gerakan
             self.matrix = next_matrix
             self.score  = next_score
-            
+            # tambahkan cell random
             self._place_random_cell()
+            # update data ke file dan UI
             self._update_data(self.matrix)
         
+        #* Cek game over
         if self._is_game_over():
             self.ui.game_over()
          
@@ -201,14 +206,14 @@ class Game2048:
         return (matrix, score)
 
     def _place_random_cell(self):
+        #* ambil semua cell kosong
         candidate_cell = []
-        # ambil semua cell kosong
         for i in range(self.row):
             for j in range(self.column):
                 if self.matrix[i][j] == 1:
                     candidate_cell.append((i, j))
     
-        # pilih salah satu dari semua cell kosong
+        #* pilih salah satu dari semua cell kosong
         random_cell = random.choice(candidate_cell)
         if random.randint(1, 100) <= 10: # 10% kemungkinan muncul cell 4
             self.matrix[random_cell[0]][random_cell[1]] = 4
@@ -216,12 +221,15 @@ class Game2048:
             self.matrix[random_cell[0]][random_cell[1]] = 2
 
     def _is_game_over(self):
+        # 1. jika ada cell kosong maka belum game over
+        # 2. disetiap cell jika ada tetangga yang nilainya sama maka belum game over
+
         adjacent = [(-1, 0), (0, 1), (1, 0), (-1, 0)]
         for i in range(self.row):
             for j in range(self.column):
-                if self.matrix[i][j] == 1: # Cek jika masih kosong, belum game over
+                if self.matrix[i][j] == 1:
                     return False
-                for idx in range(4): # Cek jika disekitarnya nilainya sama, belum game over
+                for idx in range(4): # setiap tetangga nya
                     next_i = i+adjacent[idx][0]
                     next_j = j+adjacent[idx][1]
                     if (0 <= next_i < self.row) and (0 <= next_j < self.column): # masih dalam kotak

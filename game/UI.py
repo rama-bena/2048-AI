@@ -26,6 +26,12 @@ class UserInterface:
         pygame.display.set_caption("Game 2048 by Rama Bena")
         self.screen.fill(Color.BACKGROUND)
         
+        #* Variabel font
+        # buat font lambat, jadi biar sekali inisialisasi saja
+        self.font_20 = pygame.font.SysFont(name='woff', size=20)
+        self.font_30 = pygame.font.SysFont(name='woff', size=30)
+        self.font_100 = pygame.font.SysFont(name='woff', size=100)
+
         #* Score dan High Score
         self._update_score_high_score(0, 0)
 
@@ -72,7 +78,6 @@ class UserInterface:
         pygame.display.flip()
 
     def _update_score_high_score(self, score, high_score):
-        #* Gambar Score dan High Score
         score_board_size = Size(150, 50) #? angka ngasal
         scores = [
             {
@@ -90,15 +95,15 @@ class UserInterface:
         ]
 
         for score in scores:
-            # Gambar kotak di belakang skor
+            #* Gambar kotak di belakang skor
             score_board = pygame.draw.rect(self.screen, Color.BOARD, 
                                             (score['board_left'], score['board_top'], score_board_size.width, score_board_size.height), 
                                             border_radius=5)
-            # Judul Skor
-            score_text = pygame.font.SysFont(name='woff', size=20).render(score['text'], True, Color.BACKGROUND)
+            #* Judul Skor
+            score_text = self.font_20.render(score['text'], True, Color.BACKGROUND)
             self.screen.blit(score_text, score_text.get_rect(midtop=(score_board.centerx, score_board.top+self.padding)))
-            # Nilai skor
-            score_number = pygame.font.SysFont(name='woff', size=30).render(score['value'], True, Color.BACKGROUND)
+            #* Nilai skor
+            score_number = self.font_30.render(score['value'], True, Color.BACKGROUND)
             self.screen.blit(score_number, score_number.get_rect(midbottom=score_board.midbottom))
 
     def _update_matrix(self, matrix):
@@ -111,21 +116,21 @@ class UserInterface:
                 self.cell[i][j].set_value(matrix[i][j]) # update nilai di cell
                 cell = self.cell[i][j]                  # taruh di variabel biar lebih singkat
                 
-                # Gambar block
+                #* Gambar cell block
                 block = pygame.draw.rect(self.screen, cell.color, 
-                                            (cell.point.x, cell.point.y, self.cell_size[0], self.cell_size[1]), 
-                                            border_radius=5)
-                # Gambar nilai di block
+                                         (cell.point.x, cell.point.y, self.cell_size[0], self.cell_size[1]), 
+                                         border_radius=5)
+                #* Gambar nilai di block
                 text = cell.text.get_rect(center=block.center)
                 self.screen.blit(cell.text, text)
 
     def game_over(self):
         game_over_surface = pygame.Surface(self.game_board.size)
-        game_over_surface.set_alpha(128)
+        game_over_surface.set_alpha(128)                         # tingkat transparan
         game_over_surface.fill(Color.BOARD)
     
         self.screen.blit(game_over_surface, self.game_board.topleft)
 
-        game_over_text = pygame.font.SysFont(name='woff', size=100).render("GAME OVER", True, Color.BACKGROUND)
+        game_over_text = self.font_100.render("GAME OVER", True, Color.BACKGROUND)
         self.screen.blit(game_over_text, game_over_text.get_rect(center=self.game_board.center))
         pygame.display.flip()
