@@ -5,8 +5,6 @@ from libraryBantuan.plot import plot
 import time
 
 if __name__ == "__main__":
-    # pygame.init()
-    # pygame.font.init()
 
     agent = Agent()
     game = Game2048()
@@ -14,6 +12,7 @@ if __name__ == "__main__":
     rewards = [0]
     total_score = 0
     scores = [0]
+    high_score = game.high_score
 
     is_running = True
     while is_running:
@@ -23,7 +22,7 @@ if __name__ == "__main__":
         
         state = game.get_state()
         action = agent.find_action(state)
-        score, reward, game_over = game.play(action)
+        score, reward, game_over, caution_death = game.play(action)
         next_state = game.get_state()
 
         agent.remember(state, action, reward, next_state, game_over)
@@ -39,8 +38,13 @@ if __name__ == "__main__":
             new_epsilon = max(agent.epsilon - (1*agent.n_games), 0)
             print(f"random rate : {new_epsilon}%")
             print(f"Total reward : {total_reward}")
+            print(f"Caution death : {caution_death}")
             print()
             
+            if game.high_score > high_score:
+                high_score = game.high_score
+                agent.model.save()
+
             total_reward = 0
             total_score = 0
             game.reset()

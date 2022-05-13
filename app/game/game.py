@@ -53,19 +53,20 @@ class Game2048:
             self.score += plus_score
             if self.score > self.high_score:
                 self.high_score = self.score
+            reward = plus_score
+        else:
+            reward = -10
 
         #* Cek game over
-        game_over = self._is_game_over() or self.iteration >= 10
-
+        game_over = self._is_game_over() or self.iteration >= 5
         if game_over:
             reward = -1000
-        else:
-            reward = plus_score if plus_score!=0 else -10
 
         # update data ke file dan UI
         self.ui.update(self.matrix, self.score, self.high_score)
+        caution_death = 'iterasi' if self.iteration >= 5 else 'game over'
         
-        return plus_score, reward, game_over
+        return plus_score, reward, game_over, caution_death
         
     def get_state(self):
         state = []

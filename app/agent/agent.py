@@ -2,7 +2,6 @@ import torch
 import random
 from collections import deque
 
-from app.game.game import Game2048
 from app.model.model import Linear_QNet, QTrainer
 
 
@@ -12,8 +11,9 @@ class Agent:
         self.epsilon = 100
         self.n_games = 0
         self.memory = deque(maxlen=max_memory)
-        self.model = Linear_QNet(16, 8, 8, 4)
+        self.model = Linear_QNet(16, 32, 32, 4)
         self.trainer = QTrainer(self.model, learning_rate, gamma=gamma)
+        self.model.load()
 
     #* ----------------------------- Public Method ---------------------------- #
 
